@@ -2,6 +2,7 @@ name: SilkTouchAmethyst
 version: ${project.version}
 main: me.polishkrowa.silktouchamethyst.SilkTouchAmethyst
 api-version: 1.17
+folia-supported: true
 
 permissions:
   silktouchamethyst.use:
