@@ -2,3 +2,5 @@
 usePermission: true
 #The message sent when a player tries to break a budded amethyst without silk touch/the permission
 breakWarning: "&cBreaking this block again with that item and/or your permissions won't drop the budded amethyst! You've been warned."
+#Maximum number of warning-tracked block locations stored per player.
+maxTrackedBrokenBlocksPerPlayer: 128

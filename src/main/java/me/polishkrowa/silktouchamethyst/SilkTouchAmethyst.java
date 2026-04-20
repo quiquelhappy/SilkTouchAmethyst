@@ -21,6 +21,7 @@ public final class SilkTouchAmethyst extends JavaPlugin implements Listener {
     private static final HashMap<Player, List<Location>> brokenBlocks = new HashMap<>();
     public static boolean usePermission = true;
     public static String warnMessage = "";
+    public static int maxTrackedBrokenBlocksPerPlayer = 128;
 
 
     @Override
@@ -29,10 +30,13 @@ public final class SilkTouchAmethyst extends JavaPlugin implements Listener {
         saveDefaultConfig();
         usePermission = getConfig().getBoolean("usePermission");
         warnMessage = getConfig().getString("breakWarning");
+        maxTrackedBrokenBlocksPerPlayer = Math.max(1, getConfig().getInt("maxTrackedBrokenBlocksPerPlayer", 128));
     }
 
     @Override
-    public void onDisable() { }
+    public void onDisable() {
+        brokenBlocks.clear();
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public static void onBlockBreak(BlockBreakEvent event) {
@@ -50,15 +54,20 @@ public final class SilkTouchAmethyst extends JavaPlugin implements Listener {
             list = brokenBlocks.get(event.getPlayer());
         }
 
+        Location blockLocation = event.getBlock().getLocation();
+
         if (!event.getPlayer().getInventory().getItemInMainHand().getEnchantments().containsKey(Enchantment.SILK_TOUCH) || (usePermission && !event.getPlayer().hasPermission("silktouchamethyst.use"))) {
-            if (list.contains(event.getBlock().getLocation())) {
-                list.remove(event.getBlock().getLocation());
+            if (list.contains(blockLocation)) {
+                list.remove(blockLocation);
                 brokenBlocks.put(event.getPlayer(), list);
                 return;
             }
 
-
-            list.add(event.getBlock().getLocation());
+            list.add(blockLocation);
+            // Trim oldest entries so per-player history cannot grow without bound.
+            while (list.size() > maxTrackedBrokenBlocksPerPlayer) {
+                list.remove(0);
+            }
             brokenBlocks.put(event.getPlayer(), list);
             event.setCancelled(true);
             event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', warnMessage));
@@ -72,7 +81,7 @@ public final class SilkTouchAmethyst extends JavaPlugin implements Listener {
         World world = event.getBlock().getWorld();
 
         world.dropItemNaturally(loc, new ItemStack(Material.BUDDING_AMETHYST));
-        list.remove(event.getBlock().getLocation());
+        list.remove(blockLocation);
         brokenBlocks.put(event.getPlayer(), list);
     }
 
